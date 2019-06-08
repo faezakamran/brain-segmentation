@@ -22,9 +22,9 @@ log_path = '.'
 
 gpu = '0'
 
-epochs = 128
-batch_size = 32
-base_lr = 1e-5
+epochs = 128 # no of training iterations
+batch_size = 32 # no of inputs to model at a time
+base_lr = 1e-5  # learning rate/step size to update weights
 
 
 def train():
@@ -40,26 +40,31 @@ def train():
 
     imgs_valid -= mean
     imgs_valid /= std
-
+    
+    # Build Model 
     model = unet()
-
+    
     optimizer = Adam(lr=base_lr)
     model.compile(optimizer=optimizer,
                   loss=dice_coef_loss,
                   metrics=[dice_coef])
-
+    
+    # create directory to save logs
     if not os.path.exists(log_path):
         os.mkdir(log_path)
-
+        
+    # Save training history    
     training_log = TensorBoard(log_dir=log_path)
-
+    
+    # Train Model 
     model.fit(imgs_train, imgs_mask_train,
               validation_data=(imgs_valid, imgs_mask_valid),
               batch_size=batch_size,
               epochs=epochs,
               shuffle=True,
               callbacks=[training_log])
-
+    
+    # Save weights to file to use later for prediction
     if not os.path.exists(weights_path):
         os.mkdir(weights_path)
     model.save_weights(os.path.join(
